@@ -1,4 +1,3 @@
-
 import streamlit as st
 import numpy as np
 from scipy.stats import poisson
@@ -8,9 +7,11 @@ st.set_page_config(page_title="Fair First 5 Odds", layout="centered")
 st.title("⚾ Fair First 5 Innings Odds Calculator")
 st.markdown("Enter projected runs for each team in the first 5 innings to calculate fair odds for +0.5 and ML bets.")
 
+# Inputs
 team_a_runs = st.number_input("Projected F5 Runs – Team A", min_value=0.0, max_value=10.0, value=2.14, step=0.01)
 team_b_runs = st.number_input("Projected F5 Runs – Team B", min_value=0.0, max_value=10.0, value=2.25, step=0.01)
 
+# Core calculation
 def calculate_fair_odds(team_a_runs, team_b_runs, max_runs=15):
     prob_a_win_or_tie = 0
     prob_a_win_only = 0
@@ -52,28 +53,34 @@ def calculate_fair_odds(team_a_runs, team_b_runs, max_runs=15):
         }
     }
 
+# Output
 if st.button("Calculate Fair Odds"):
     results = calculate_fair_odds(team_a_runs, team_b_runs)
     st.markdown("### 📊 Fair Odds")
 
-    col1, col2 = st.columns(2)
+    # Team A Output
+    st.markdown("#### 🟥 Team A")
+    col1, col2 = st.columns([1, 1])
     with col1:
-        st.markdown("**Team A +0.5 F5**")
+        st.markdown("**+0.5 F5**")
         st.markdown(f"- Probability: {results['Team A +0.5 F5']['probability']}%")
         st.markdown(f"- Moneyline: `{results['Team A +0.5 F5']['moneyline']}`")
-
     with col2:
-        st.markdown("**Team A ML F5**")
+        st.markdown("**ML F5**")
         st.markdown(f"- Probability: {results['Team A ML F5']['probability']}%")
         st.markdown(f"- Moneyline: `{results['Team A ML F5']['moneyline']}`")
 
-    col3, col4 = st.columns(2)
+    # Divider
+    st.markdown("---")
+
+    # Team B Output
+    st.markdown("#### 🟦 Team B")
+    col3, col4 = st.columns([1, 1])
     with col3:
-        st.markdown("**Team B +0.5 F5**")
+        st.markdown("**+0.5 F5**")
         st.markdown(f"- Probability: {results['Team B +0.5 F5']['probability']}%")
         st.markdown(f"- Moneyline: `{results['Team B +0.5 F5']['moneyline']}`")
-
     with col4:
-        st.markdown("**Team B ML F5**")
+        st.markdown("**ML F5**")
         st.markdown(f"- Probability: {results['Team B ML F5']['probability']}%")
         st.markdown(f"- Moneyline: `{results['Team B ML F5']['moneyline']}`")
