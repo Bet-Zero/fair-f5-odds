@@ -8,6 +8,9 @@ bets using Poisson distribution modeling.
 import streamlit as st
 from scipy.stats import poisson
 
+# Constants
+MAX_RUNS = 15  # Maximum runs to consider in probability calculations
+
 # Page configuration
 st.set_page_config(page_title="⚾ Fair F5 Odds Calculator", layout="centered")
 
@@ -81,7 +84,7 @@ def to_moneyline(prob: float) -> str:
         return f"+{round(100 * (1 - prob) / prob)}"
 
 
-def calculate_all_odds(team_a_runs: float, team_b_runs: float, max_runs: int = 15) -> dict:
+def calculate_all_odds(team_a_runs: float, team_b_runs: float, max_runs: int = MAX_RUNS) -> dict:
     """
     Calculate fair odds for all F5 bet types using Poisson distribution.
     
@@ -142,7 +145,7 @@ with col_runs[0]:
     team_a_runs = st.number_input(
         f"Projected F5 Runs – {team_a_name}",
         min_value=0.0,
-        max_value=15.0,
+        max_value=float(MAX_RUNS),
         value=2.00,
         step=0.01,
         help="Expected runs for this team in the first 5 innings based on your projections"
@@ -151,7 +154,7 @@ with col_runs[1]:
     team_b_runs = st.number_input(
         f"Projected F5 Runs – {team_b_name}",
         min_value=0.0,
-        max_value=15.0,
+        max_value=float(MAX_RUNS),
         value=2.00,
         step=0.01,
         help="Expected runs for this team in the first 5 innings based on your projections"
