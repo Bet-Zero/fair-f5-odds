@@ -1,2 +1,6 @@
-streamlit
-scipy
+# Fair F5 Odds Calculator dependencies
+streamlit>=1.30.0,<2.0.0
+scipy>=1.11.0,<2.0.0
+
+# Development/testing
+pytest>=7.0.0,<9.0.0
