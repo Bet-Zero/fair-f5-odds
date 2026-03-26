@@ -17,6 +17,76 @@ st.set_page_config(page_title="⚾ Fair F5 Odds Calculator", layout="centered")
 # Custom CSS for styling
 st.markdown("""
 <style>
+/* Tighten default block vertical gaps */
+.block-container {
+    padding-top: 3.5rem;
+    padding-bottom: 1rem;
+}
+/* Hide sidebar entirely */
+[data-testid="stSidebar"] {
+    display: none;
+}
+[data-testid="collapsedControl"] {
+    display: none;
+}
+div[data-testid="stVerticalBlock"] > div {
+    gap: 0.25rem;
+}
+/* Make team name text inputs look like plain editable text */
+div[data-testid="stTextInput"] input {
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 1px dashed #555 !important;
+    border-radius: 0 !important;
+    padding: 2px 4px !important;
+    font-size: 14px !important;
+    color: #fff !important;
+    box-shadow: none !important;
+}
+div[data-testid="stTextInput"] input:focus {
+    border-bottom: 1px solid #aaa !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+div[data-testid="stTextInput"] > div {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}/* Constrain runs number input width, keeping arrows visible */
+div[data-testid="stNumberInput"] {
+    max-width: 140px;
+    margin-right: 8px;
+}
+/* Color number input step buttons */
+button[data-testid="stNumberInputStepUp"]:hover {
+    background-color: #004d00 !important;
+    border-color: #00C805 !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+button[data-testid="stNumberInputStepDown"]:hover {
+    background-color: #4d0000 !important;
+    border-color: #ff4444 !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+button[data-testid="stNumberInputStepUp"],
+button[data-testid="stNumberInputStepUp"]:focus,
+button[data-testid="stNumberInputStepUp"]:active,
+button[data-testid="stNumberInputStepUp"]:focus-visible,
+button[data-testid="stNumberInputStepDown"],
+button[data-testid="stNumberInputStepDown"]:focus,
+button[data-testid="stNumberInputStepDown"]:active,
+button[data-testid="stNumberInputStepDown"]:focus-visible {
+    background-color: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+/* Compact number inputs so text field and arrows are close */
+div[data-testid="stHorizontalBlock"] {
+    gap: 0.5rem;
+}
 div.stButton > button:first-child {
     background-color: #2A2A2A;
     color: white;
@@ -52,14 +122,12 @@ div.stButton > button:first-child:hover {
 """, unsafe_allow_html=True)
 
 # Title and description
-st.markdown("<h1 style='font-size: 38px;'>⚾ Fair F5 Odds Calculator</h1>", unsafe_allow_html=True)
 st.markdown("""
-<div style='margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #444;'>
-    <span style='font-size: 22px; font-weight: bold;'>First 5 Innings</span>
+<div style='margin-bottom: 8px; padding-bottom: 8px; border-bottom: 2px solid #444;'>
+    <span style='font-size: 30px; font-weight: bold;'>⚾ Fair F5 Odds Calculator</span>
+    <span style='font-size: 16px; color: #aaa; margin-left: 12px;'>First 5 Innings</span>
 </div>
 """, unsafe_allow_html=True)
-
-st.markdown("Enter projected runs and team names to calculate fair odds for F5 bets.")
 
 
 def to_moneyline(prob: float) -> str:
@@ -132,67 +200,34 @@ def calculate_all_odds(team_a_runs: float, team_b_runs: float, max_runs: int = M
     }
 
 
-# Team name inputs
-col_names = st.columns(2)
-with col_names[0]:
-    team_a_name = st.text_input("Team A Name", value="Team A", max_chars=20)
-with col_names[1]:
-    team_b_name = st.text_input("Team B Name", value="Team B", max_chars=20)
+# Seed session state defaults
+if "runs_a" not in st.session_state:
+    st.session_state["runs_a"] = 2.00
+if "runs_b" not in st.session_state:
+    st.session_state["runs_b"] = 2.00
 
-# Projected runs inputs with tooltips
-col_runs = st.columns(2)
-with col_runs[0]:
-    team_a_runs = st.number_input(
-        f"Projected F5 Runs – {team_a_name}",
-        min_value=0.0,
-        max_value=float(MAX_RUNS),
-        value=2.00,
-        step=0.01,
-        help="Expected runs for this team in the first 5 innings based on your projections"
-    )
-with col_runs[1]:
-    team_b_runs = st.number_input(
-        f"Projected F5 Runs – {team_b_name}",
-        min_value=0.0,
-        max_value=float(MAX_RUNS),
-        value=2.00,
-        step=0.01,
-        help="Expected runs for this team in the first 5 innings based on your projections"
-    )
+# Calculate odds from current session state values (before inputs are rendered)
+odds = calculate_all_odds(st.session_state["runs_a"], st.session_state["runs_b"])
 
 # Input validation
-if team_a_runs == 0.0 and team_b_runs == 0.0:
+if st.session_state["runs_a"] == 0.0 and st.session_state["runs_b"] == 0.0:
     st.warning("⚠️ Both teams have 0 projected runs. Results may not be meaningful.")
 
-# Explanatory section (collapsed by default)
-with st.expander("ℹ️ What do these bet types mean?"):
-    st.markdown("""
-    - **+0.5 (Run Line)**: Win if your team is winning OR tied after 5 innings. 
-      This is like getting half a run head start.
-    - **Moneyline (ML)**: Win if your team is winning after 5 innings. 
-      Pushes (refunds) if tied.
-    - **-0.5 (Run Line)**: Win ONLY if your team is winning after 5 innings. 
-      This is like giving half a run handicap.
-    
-    *Odds are calculated using Poisson distribution modeling based on your projected run totals.*
-    """)
+st.markdown("<div style='border-top: 1px solid #444; margin-top: 16px;'></div><div style='height: 20px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='font-size: 13px; color: #666; margin-bottom: 10px; letter-spacing: 0.05em; text-transform: uppercase;'>Fair Odds &mdash; First 5 Innings</div>", unsafe_allow_html=True)
 
-# Calculate and display results automatically
-odds = calculate_all_odds(team_a_runs, team_b_runs)
-
-st.markdown("---")
-st.markdown("### 📊 Fair Odds – First 5 Innings")
-
-# Header row
-header_cols = st.columns([1.5, 1, 1, 1])
+# Header row  — 5 cols: team | runs | +0.5 | ML | -0.5
+header_cols = st.columns([1.2, 1.3, 1, 1, 1])
 with header_cols[0]:
-    st.markdown("**Team**")
+    st.markdown("<div></div>", unsafe_allow_html=True)
 with header_cols[1]:
-    st.markdown("**+0.5**")
+    st.markdown("<div style='text-align: center; font-weight: bold; color: #888; font-size: 13px;'>F5 Runs</div>", unsafe_allow_html=True)
 with header_cols[2]:
-    st.markdown("**Moneyline**")
+    st.markdown("<div style='text-align: center; font-weight: bold; color: #ccc;'>+0.5</div>", unsafe_allow_html=True)
 with header_cols[3]:
-    st.markdown("**-0.5**")
+    st.markdown("<div style='text-align: center; font-weight: bold; color: #ccc;'>Moneyline</div>", unsafe_allow_html=True)
+with header_cols[4]:
+    st.markdown("<div style='text-align: center; font-weight: bold; color: #ccc;'>-0.5</div>", unsafe_allow_html=True)
 
 
 def render_odds_cell(prob: float, odds_str: str):
@@ -206,26 +241,35 @@ def render_odds_cell(prob: float, odds_str: str):
 
 
 # Team A row
-row_a = st.columns([1.5, 1, 1, 1])
+row_a = st.columns([1.2, 1.3, 1, 1, 1])
 with row_a[0]:
-    st.markdown(f"🟥 **{team_a_name}**")
+    st.markdown("<div style='display:flex; align-items:center; min-height:90px; font-size:20px; font-weight:bold; padding-left:4px;'><span style='margin-right:8px;'>🟥</span>Team A</div>", unsafe_allow_html=True)
 with row_a[1]:
-    render_odds_cell(odds["team_a"]["plus_0_5"]["prob"], odds["team_a"]["plus_0_5"]["odds"])
+    st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
+    st.number_input("runs_a", min_value=0.0, max_value=float(MAX_RUNS), step=0.01, key="runs_a", label_visibility="collapsed", help="Expected F5 runs")
 with row_a[2]:
-    render_odds_cell(odds["team_a"]["ml"]["prob"], odds["team_a"]["ml"]["odds"])
+    render_odds_cell(odds["team_a"]["plus_0_5"]["prob"], odds["team_a"]["plus_0_5"]["odds"])
 with row_a[3]:
+    render_odds_cell(odds["team_a"]["ml"]["prob"], odds["team_a"]["ml"]["odds"])
+with row_a[4]:
     render_odds_cell(odds["team_a"]["minus_0_5"]["prob"], odds["team_a"]["minus_0_5"]["odds"])
 
 # Team B row
-row_b = st.columns([1.5, 1, 1, 1])
+row_b = st.columns([1.2, 1.3, 1, 1, 1])
 with row_b[0]:
-    st.markdown(f"🟦 **{team_b_name}**")
+    st.markdown("<div style='display:flex; align-items:center; min-height:90px; font-size:20px; font-weight:bold; padding-left:4px;'><span style='margin-right:8px;'>🟦</span>Team B</div>", unsafe_allow_html=True)
 with row_b[1]:
-    render_odds_cell(odds["team_b"]["plus_0_5"]["prob"], odds["team_b"]["plus_0_5"]["odds"])
+    st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
+    st.number_input("runs_b", min_value=0.0, max_value=float(MAX_RUNS), step=0.01, key="runs_b", label_visibility="collapsed", help="Expected F5 runs")
 with row_b[2]:
-    render_odds_cell(odds["team_b"]["ml"]["prob"], odds["team_b"]["ml"]["odds"])
+    render_odds_cell(odds["team_b"]["plus_0_5"]["prob"], odds["team_b"]["plus_0_5"]["odds"])
 with row_b[3]:
+    render_odds_cell(odds["team_b"]["ml"]["prob"], odds["team_b"]["ml"]["odds"])
+with row_b[4]:
     render_odds_cell(odds["team_b"]["minus_0_5"]["prob"], odds["team_b"]["minus_0_5"]["odds"])
 
 # Show tie probability
-st.markdown(f"<div style='text-align: center; color: #888; margin-top: 10px;'>Tie probability: {odds['tie_prob']*100:.1f}%</div>", unsafe_allow_html=True)
+st.markdown(f"<div style='text-align: center; color: #888; margin-top: 18px; margin-bottom: 18px;'>Tie probability: {odds['tie_prob']*100:.1f}%</div>", unsafe_allow_html=True)
+
+# Decorative bottom rectangle
+st.markdown("<div style='border: 1px solid #3A3A3A; border-radius: 8px; height: 48px; margin-top: 4px;'></div>", unsafe_allow_html=True)
