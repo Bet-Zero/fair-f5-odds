@@ -48,10 +48,21 @@ streamlit run fair_f5_streamlit.py
 
 The app will open in your browser at `http://localhost:8501`.
 
+## 🧪 Running Tests
+
+```bash
+# Install test dependencies
+pip install -r requirements.txt
+
+# Run all tests
+pytest test_fair_f5.py -v
+```
+
 ## 📦 Dependencies
 
 - **streamlit** – Web app framework
 - **scipy** – Statistical functions (Poisson distribution)
+- **pytest** – Testing framework (dev only)
 
 ## 📝 Usage Tips
 
