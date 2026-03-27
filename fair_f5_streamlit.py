@@ -118,6 +118,13 @@ div.stButton > button:first-child:hover {
     display: inline-block;
     margin-top: 4px;
 }
+/* Selectbox dark theme for adjustments row */
+div[data-testid="stSelectbox"] > div > div {
+    background-color: #1e1e1e !important;
+    border-color: #3A3A3A !important;
+    color: #ccc !important;
+    font-size: 13px !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -205,15 +212,44 @@ if "runs_a" not in st.session_state:
     st.session_state["runs_a"] = 2.00
 if "runs_b" not in st.session_state:
     st.session_state["runs_b"] = 2.00
+if "vig_pct" not in st.session_state:
+    st.session_state["vig_pct"] = 0.0
+if "home_team" not in st.session_state:
+    st.session_state["home_team"] = "None"
+if "home_adv_pct" not in st.session_state:
+    st.session_state["home_adv_pct"] = 0.0
+
+# Apply home team advantage to effective run projections before Poisson calc
+_runs_a = st.session_state["runs_a"]
+_runs_b = st.session_state["runs_b"]
+_home_team = st.session_state["home_team"]
+_home_adv = st.session_state["home_adv_pct"]
+
+if _home_team == "Team A" and _home_adv > 0.0:
+    _runs_a = _runs_a * (1 + _home_adv / 100)
+elif _home_team == "Team B" and _home_adv > 0.0:
+    _runs_b = _runs_b * (1 + _home_adv / 100)
 
 # Calculate odds from current session state values (before inputs are rendered)
-odds = calculate_all_odds(st.session_state["runs_a"], st.session_state["runs_b"])
+odds = calculate_all_odds(_runs_a, _runs_b)
 
 # Input validation
 if st.session_state["runs_a"] == 0.0 and st.session_state["runs_b"] == 0.0:
     st.warning("⚠️ Both teams have 0 projected runs. Results may not be meaningful.")
 
-st.markdown("<div style='border-top: 1px solid #444; margin-top: 16px;'></div><div style='height: 20px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='border-top: 1px solid #444; margin-top: 16px;'></div><div style='height: 12px;'></div>", unsafe_allow_html=True)
+
+# Adjustments row — vig and home advantage controls
+st.markdown("<div style='font-size: 12px; color: #555; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px;'>Adjustments</div>", unsafe_allow_html=True)
+adj_cols = st.columns([1, 1, 1])
+with adj_cols[0]:
+    st.number_input("Vig %", min_value=0.0, max_value=20.0, step=0.1, key="vig_pct", help="Sportsbook margin (0 = fair odds)", format="%.1f")
+with adj_cols[1]:
+    st.selectbox("Home Team", options=["None", "Team A", "Team B"], key="home_team", help="Select home team for advantage boost")
+with adj_cols[2]:
+    st.number_input("Home Adv %", min_value=0.0, max_value=20.0, step=0.5, key="home_adv_pct", help="Boost to home team's projected runs", format="%.1f")
+
+st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
 st.markdown("<div style='font-size: 13px; color: #666; margin-bottom: 10px; letter-spacing: 0.05em; text-transform: uppercase;'>Fair Odds &mdash; First 5 Innings</div>", unsafe_allow_html=True)
 
 # Header row  — 5 cols: team | runs | +0.5 | ML | -0.5
@@ -228,6 +264,13 @@ with header_cols[3]:
     st.markdown("<div style='text-align: center; font-weight: bold; color: #ccc;'>Moneyline</div>", unsafe_allow_html=True)
 with header_cols[4]:
     st.markdown("<div style='text-align: center; font-weight: bold; color: #ccc;'>-0.5</div>", unsafe_allow_html=True)
+
+
+def apply_vig(prob: float, vig_pct: float) -> float:
+    """Inflate fair probability by sportsbook margin; clamp to [0, 1]."""
+    if vig_pct == 0.0:
+        return prob
+    return min(prob * (1 + vig_pct / 100), 1.0)
 
 
 def render_odds_cell(prob: float, odds_str: str):
@@ -248,11 +291,14 @@ with row_a[1]:
     st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
     st.number_input("runs_a", min_value=0.0, max_value=float(MAX_RUNS), step=0.01, key="runs_a", label_visibility="collapsed", help="Expected F5 runs")
 with row_a[2]:
-    render_odds_cell(odds["team_a"]["plus_0_5"]["prob"], odds["team_a"]["plus_0_5"]["odds"])
+    _p = odds["team_a"]["plus_0_5"]["prob"]
+    render_odds_cell(_p, to_moneyline(apply_vig(_p, st.session_state["vig_pct"])))
 with row_a[3]:
-    render_odds_cell(odds["team_a"]["ml"]["prob"], odds["team_a"]["ml"]["odds"])
+    _p = odds["team_a"]["ml"]["prob"]
+    render_odds_cell(_p, to_moneyline(apply_vig(_p, st.session_state["vig_pct"])))
 with row_a[4]:
-    render_odds_cell(odds["team_a"]["minus_0_5"]["prob"], odds["team_a"]["minus_0_5"]["odds"])
+    _p = odds["team_a"]["minus_0_5"]["prob"]
+    render_odds_cell(_p, to_moneyline(apply_vig(_p, st.session_state["vig_pct"])))
 
 # Team B row
 row_b = st.columns([1.2, 1.3, 1, 1, 1])
@@ -262,11 +308,14 @@ with row_b[1]:
     st.markdown("<div style='height:28px'></div>", unsafe_allow_html=True)
     st.number_input("runs_b", min_value=0.0, max_value=float(MAX_RUNS), step=0.01, key="runs_b", label_visibility="collapsed", help="Expected F5 runs")
 with row_b[2]:
-    render_odds_cell(odds["team_b"]["plus_0_5"]["prob"], odds["team_b"]["plus_0_5"]["odds"])
+    _p = odds["team_b"]["plus_0_5"]["prob"]
+    render_odds_cell(_p, to_moneyline(apply_vig(_p, st.session_state["vig_pct"])))
 with row_b[3]:
-    render_odds_cell(odds["team_b"]["ml"]["prob"], odds["team_b"]["ml"]["odds"])
+    _p = odds["team_b"]["ml"]["prob"]
+    render_odds_cell(_p, to_moneyline(apply_vig(_p, st.session_state["vig_pct"])))
 with row_b[4]:
-    render_odds_cell(odds["team_b"]["minus_0_5"]["prob"], odds["team_b"]["minus_0_5"]["odds"])
+    _p = odds["team_b"]["minus_0_5"]["prob"]
+    render_odds_cell(_p, to_moneyline(apply_vig(_p, st.session_state["vig_pct"])))
 
 # Show tie probability
 st.markdown(f"<div style='text-align: center; color: #888; margin-top: 18px; margin-bottom: 18px;'>Tie probability: {odds['tie_prob']*100:.1f}%</div>", unsafe_allow_html=True)

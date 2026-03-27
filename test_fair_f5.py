@@ -258,5 +258,38 @@ class TestIntegration:
         assert result["team_b"]["minus_0_5"]["prob"] > 0.5
 
 
+def apply_vig(prob: float, vig_pct: float) -> float:
+    """Local copy of apply_vig for testing (mirrors fair_f5_streamlit.py)."""
+    if vig_pct == 0.0:
+        return prob
+    return min(prob * (1 + vig_pct / 100), 1.0)
+
+
+class TestApplyVig:
+    def test_zero_vig_is_identity(self):
+        """With 0% vig, probability is unchanged."""
+        assert apply_vig(0.5, 0.0) == 0.5
+        assert apply_vig(0.3, 0.0) == 0.3
+
+    def test_standard_vig_inflates_probability(self):
+        """4.76% vig (standard -110/-110) inflates a 50% prob to ~52.38%."""
+        result = apply_vig(0.5, 4.76)
+        assert abs(result - 0.5238) < 0.001
+
+    def test_clamping_at_extreme_values(self):
+        """Very high vig on near-certain prob clamps to 1.0."""
+        assert apply_vig(0.95, 20.0) == 1.0
+
+    def test_zero_probability_stays_zero(self):
+        """Zero probability stays zero regardless of vig."""
+        assert apply_vig(0.0, 10.0) == 0.0
+
+    def test_home_advantage_shifts_odds(self):
+        """Boosting home team runs should improve their win probability."""
+        baseline = calculate_all_odds(2.0, 2.0)
+        boosted = calculate_all_odds(2.0 * 1.1, 2.0)
+        assert boosted["team_a"]["ml"]["prob"] > baseline["team_a"]["ml"]["prob"]
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
