@@ -22,13 +22,31 @@ st.markdown("""
     padding-top: 3.5rem;
     padding-bottom: 1rem;
 }
-/* Subtle sidebar styling */
+/* Hide sidebar entirely */
 [data-testid="stSidebar"] {
-    background-color: #111 !important;
-    border-right: 1px solid #2a2a2a !important;
+    display: none;
 }
-[data-testid="stSidebar"] section {
-    padding-top: 1.5rem !important;
+[data-testid="collapsedControl"] {
+    display: none;
+}
+/* Muted expander for adjustments */
+div[data-testid="stExpander"] {
+    border: 1px solid #2a2a2a !important;
+    border-radius: 8px !important;
+    background: transparent !important;
+}
+div[data-testid="stExpander"] summary {
+    color: #555 !important;
+    font-size: 12px !important;
+    letter-spacing: 0.06em;
+}
+div[data-testid="stExpander"] summary:hover {
+    color: #888 !important;
+}
+/* Radio buttons in adjustments */
+div[data-testid="stExpander"] div[data-testid="stRadio"] label {
+    font-size: 13px !important;
+    color: #aaa !important;
 }
 div[data-testid="stVerticalBlock"] > div {
     gap: 0.25rem;
@@ -118,13 +136,6 @@ div.stButton > button:first-child:hover {
     border-radius: 4px;
     display: inline-block;
     margin-top: 4px;
-}
-/* Selectbox dark theme for adjustments row */
-div[data-testid="stSelectbox"] > div > div {
-    background-color: #1e1e1e !important;
-    border-color: #3A3A3A !important;
-    color: #ccc !important;
-    font-size: 13px !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -241,14 +252,6 @@ if st.session_state["runs_a"] == 0.0 and st.session_state["runs_b"] == 0.0:
 st.markdown("<div style='border-top: 1px solid #444; margin-top: 16px;'></div><div style='height: 20px;'></div>", unsafe_allow_html=True)
 st.markdown("<div style='font-size: 13px; color: #666; margin-bottom: 10px; letter-spacing: 0.05em; text-transform: uppercase;'>Fair Odds &mdash; First 5 Innings</div>", unsafe_allow_html=True)
 
-# Sidebar — adjustments (vig and home advantage)
-with st.sidebar:
-    st.markdown("<div style='font-size: 12px; color: #555; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px;'>Adjustments</div>", unsafe_allow_html=True)
-    st.number_input("Vig %", min_value=0.0, max_value=20.0, step=0.1, key="vig_pct", help="Sportsbook margin (0 = fair odds)", format="%.1f")
-    st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
-    st.selectbox("Home Team", options=["None", "Team A", "Team B"], key="home_team", help="Select home team for advantage boost")
-    st.number_input("Home Adv %", min_value=0.0, max_value=20.0, step=0.5, key="home_adv_pct", help="Boost to home team's projected runs", format="%.1f")
-
 # Header row  — 5 cols: team | runs | +0.5 | ML | -0.5
 header_cols = st.columns([1.2, 1.3, 1, 1, 1])
 with header_cols[0]:
@@ -317,5 +320,11 @@ with row_b[4]:
 # Show tie probability
 st.markdown(f"<div style='text-align: center; color: #888; margin-top: 18px; margin-bottom: 18px;'>Tie probability: {odds['tie_prob']*100:.1f}%</div>", unsafe_allow_html=True)
 
-# Decorative bottom rectangle
-st.markdown("<div style='border: 1px solid #3A3A3A; border-radius: 8px; height: 48px; margin-top: 4px;'></div>", unsafe_allow_html=True)
+# Adjustments expander — subtle, at the bottom, collapsed by default
+with st.expander("⚙ adjustments"):
+    adj_cols = st.columns(2)
+    with adj_cols[0]:
+        st.number_input("Vig %", min_value=0.0, max_value=20.0, step=0.1, key="vig_pct", help="Sportsbook margin (0 = fair odds)", format="%.1f")
+    with adj_cols[1]:
+        st.number_input("Home Adv %", min_value=0.0, max_value=20.0, step=0.5, key="home_adv_pct", help="Boost to home team's projected runs", format="%.1f")
+    st.radio("Home Team", options=["None", "Team A", "Team B"], key="home_team", horizontal=True, label_visibility="collapsed")
