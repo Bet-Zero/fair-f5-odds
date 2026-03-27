@@ -53,6 +53,39 @@ div[data-testid="stExpander"] summary:hover {
     font-size: 12px !important;
     color: #666 !important;
 }
+/* Sidebar number input labels - muted uppercase */
+[data-testid="stSidebar"] [data-testid="stNumberInput"] label p {
+    font-size: 11px !important;
+    color: #555 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+}
+/* Sidebar number input values - brighter */
+[data-testid="stSidebar"] [data-testid="stNumberInput"] input {
+    color: #ccc !important;
+    font-weight: 500 !important;
+}
+/* Smaller tooltip icons */
+[data-testid="stSidebar"] [data-testid="stTooltipIcon"] {
+    width: 14px !important;
+    height: 14px !important;
+}
+[data-testid="stSidebar"] [data-testid="stTooltipIcon"] svg {
+    width: 12px !important;
+    height: 12px !important;
+}
+/* Sidebar reset button - subtle */
+[data-testid="stSidebar"] button[kind="secondary"] {
+    background: transparent !important;
+    border: 1px solid #333 !important;
+    color: #666 !important;
+    font-size: 11px !important;
+    padding: 4px 12px !important;
+}
+[data-testid="stSidebar"] button[kind="secondary"]:hover {
+    border-color: #555 !important;
+    color: #888 !important;
+}
 div[data-testid="stVerticalBlock"] > div {
     gap: 0.25rem;
 }
@@ -329,9 +362,16 @@ st.markdown(f"<div style='text-align: center; color: #888; margin-top: 18px; mar
 st.markdown("<div style='border: 1px solid #2a2a2a; border-radius: 8px; height: 48px; margin-top: 8px;'></div>", unsafe_allow_html=True)
 
 # Adjustments in sidebar — collapsible, outside main content
+def reset_adjustments():
+    st.session_state["vig_pct"] = 0.0
+    st.session_state["home_adv_pct"] = 0.0
+    st.session_state["home_team"] = "None"
+
 with st.sidebar:
     st.markdown("<div style='font-size: 12px; color: #666; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.05em;'>⚙ Adjustments</div>", unsafe_allow_html=True)
     st.number_input("Vig %", min_value=0.0, max_value=20.0, step=0.1, key="vig_pct", help="Sportsbook margin (0 = fair odds)", format="%.1f")
     st.number_input("Home Adv %", min_value=0.0, max_value=20.0, step=0.5, key="home_adv_pct", help="Boost to home team's projected runs", format="%.1f")
     st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
     st.radio("Home Team", options=["None", "Team A", "Team B"], key="home_team")
+    st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+    st.button("Reset", on_click=reset_adjustments, type="secondary", use_container_width=True)
