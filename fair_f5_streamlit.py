@@ -22,12 +22,13 @@ st.markdown("""
     padding-top: 3.5rem;
     padding-bottom: 1rem;
 }
-/* Hide sidebar entirely */
+/* Subtle sidebar styling */
 [data-testid="stSidebar"] {
-    display: none;
+    background-color: #111 !important;
+    border-right: 1px solid #2a2a2a !important;
 }
-[data-testid="collapsedControl"] {
-    display: none;
+[data-testid="stSidebar"] section {
+    padding-top: 1.5rem !important;
 }
 div[data-testid="stVerticalBlock"] > div {
     gap: 0.25rem;
@@ -237,20 +238,16 @@ odds = calculate_all_odds(_runs_a, _runs_b)
 if st.session_state["runs_a"] == 0.0 and st.session_state["runs_b"] == 0.0:
     st.warning("⚠️ Both teams have 0 projected runs. Results may not be meaningful.")
 
-st.markdown("<div style='border-top: 1px solid #444; margin-top: 16px;'></div><div style='height: 12px;'></div>", unsafe_allow_html=True)
-
-# Adjustments row — vig and home advantage controls
-st.markdown("<div style='font-size: 12px; color: #555; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 4px;'>Adjustments</div>", unsafe_allow_html=True)
-adj_cols = st.columns([1, 1, 1])
-with adj_cols[0]:
-    st.number_input("Vig %", min_value=0.0, max_value=20.0, step=0.1, key="vig_pct", help="Sportsbook margin (0 = fair odds)", format="%.1f")
-with adj_cols[1]:
-    st.selectbox("Home Team", options=["None", "Team A", "Team B"], key="home_team", help="Select home team for advantage boost")
-with adj_cols[2]:
-    st.number_input("Home Adv %", min_value=0.0, max_value=20.0, step=0.5, key="home_adv_pct", help="Boost to home team's projected runs", format="%.1f")
-
-st.markdown("<div style='height: 14px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='border-top: 1px solid #444; margin-top: 16px;'></div><div style='height: 20px;'></div>", unsafe_allow_html=True)
 st.markdown("<div style='font-size: 13px; color: #666; margin-bottom: 10px; letter-spacing: 0.05em; text-transform: uppercase;'>Fair Odds &mdash; First 5 Innings</div>", unsafe_allow_html=True)
+
+# Sidebar — adjustments (vig and home advantage)
+with st.sidebar:
+    st.markdown("<div style='font-size: 12px; color: #555; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px;'>Adjustments</div>", unsafe_allow_html=True)
+    st.number_input("Vig %", min_value=0.0, max_value=20.0, step=0.1, key="vig_pct", help="Sportsbook margin (0 = fair odds)", format="%.1f")
+    st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+    st.selectbox("Home Team", options=["None", "Team A", "Team B"], key="home_team", help="Select home team for advantage boost")
+    st.number_input("Home Adv %", min_value=0.0, max_value=20.0, step=0.5, key="home_adv_pct", help="Boost to home team's projected runs", format="%.1f")
 
 # Header row  — 5 cols: team | runs | +0.5 | ML | -0.5
 header_cols = st.columns([1.2, 1.3, 1, 1, 1])
