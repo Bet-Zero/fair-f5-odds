@@ -22,12 +22,13 @@ st.markdown("""
     padding-top: 3.5rem;
     padding-bottom: 1rem;
 }
-/* Hide sidebar entirely */
+/* Sidebar styling for adjustments */
 [data-testid="stSidebar"] {
-    display: none;
+    background: #0e1117 !important;
+    border-right: 1px solid #2a2a2a !important;
 }
-[data-testid="collapsedControl"] {
-    display: none;
+[data-testid="stSidebar"] [data-testid="stMarkdown"] {
+    color: #888 !important;
 }
 /* Muted expander for adjustments */
 div[data-testid="stExpander"] {
@@ -43,37 +44,14 @@ div[data-testid="stExpander"] summary {
 div[data-testid="stExpander"] summary:hover {
     color: #888 !important;
 }
-/* Style adjustments popover button */
-button[data-testid="stPopoverButton"] {
-    background: transparent !important;
-    border: 1px solid #2a2a2a !important;
-    border-radius: 8px !important;
-    color: #555 !important;
-    font-size: 12px !important;
-    letter-spacing: 0.06em !important;
-    padding: 10px 16px !important;
-    width: 100% !important;
-}
-button[data-testid="stPopoverButton"]:hover {
-    color: #888 !important;
-    border-color: #444 !important;
-    background: transparent !important;
-}
-/* Style popover content panel */
-div[data-testid="stPopover"] {
-    background: #1a1a1a !important;
-    border: 1px solid #3a3a3a !important;
-    border-radius: 8px !important;
-}
-/* Radio buttons in adjustments */
-div[data-testid="stPopover"] div[data-testid="stRadio"] label {
+/* Sidebar radio buttons */
+[data-testid="stSidebar"] div[data-testid="stRadio"] label {
     font-size: 13px !important;
     color: #aaa !important;
 }
-div[data-testid="stPopover"] div[data-testid="stRadio"] p {
+[data-testid="stSidebar"] div[data-testid="stRadio"] p {
     font-size: 12px !important;
     color: #666 !important;
-    margin-bottom: 8px !important;
 }
 div[data-testid="stVerticalBlock"] > div {
     gap: 0.25rem;
@@ -347,18 +325,13 @@ with row_b[4]:
 # Show tie probability
 st.markdown(f"<div style='text-align: center; color: #888; margin-top: 18px; margin-bottom: 18px;'>Tie probability: {odds['tie_prob']*100:.1f}%</div>", unsafe_allow_html=True)
 
-# Adjustments popover — floats over page, doesn't cause scrolling
-adj_container = st.columns([1, 2, 1])
-with adj_container[1]:
-    with st.popover("⚙ adjustments", use_container_width=True):
-        st.markdown("<div style='font-size: 12px; color: #888; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em;'>Odds Adjustments</div>", unsafe_allow_html=True)
-        adj_cols = st.columns(2)
-        with adj_cols[0]:
-            st.number_input("Vig %", min_value=0.0, max_value=20.0, step=0.1, key="vig_pct", help="Sportsbook margin (0 = fair odds)", format="%.1f")
-        with adj_cols[1]:
-            st.number_input("Home Adv %", min_value=0.0, max_value=20.0, step=0.5, key="home_adv_pct", help="Boost to home team's projected runs", format="%.1f")
-        st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
-        st.radio("Home Team", options=["None", "Team A", "Team B"], key="home_team", horizontal=True)
-
 # Decorative rectangle outline (aesthetic only)
 st.markdown("<div style='border: 1px solid #2a2a2a; border-radius: 8px; height: 48px; margin-top: 8px;'></div>", unsafe_allow_html=True)
+
+# Adjustments in sidebar — collapsible, outside main content
+with st.sidebar:
+    st.markdown("<div style='font-size: 12px; color: #666; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.05em;'>⚙ Adjustments</div>", unsafe_allow_html=True)
+    st.number_input("Vig %", min_value=0.0, max_value=20.0, step=0.1, key="vig_pct", help="Sportsbook margin (0 = fair odds)", format="%.1f")
+    st.number_input("Home Adv %", min_value=0.0, max_value=20.0, step=0.5, key="home_adv_pct", help="Boost to home team's projected runs", format="%.1f")
+    st.markdown("<div style='height: 8px;'></div>", unsafe_allow_html=True)
+    st.radio("Home Team", options=["None", "Team A", "Team B"], key="home_team")
